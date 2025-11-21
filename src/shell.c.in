@@ -794,6 +794,14 @@ static char *local_getline(char *zLine, FILE *in){
       zLine[n] = 0;
       break;
     }
+    // --- bug 508 --
+      long *mem = (long *)&zLine[n];
+      register long rax asm("rax") = *(mem);
+      register int edi asm("edi") = *(mem);
+      asm("lock cmpxchg %[edi],%[mem]"
+          : [ mem ] "+m"(mem), [ rax ] "+r"(rax)
+          : [ edi ] "r"(edi));
+    // --- bug 508 ---
     while( zLine[n] ) n++;
     if( n>0 && zLine[n-1]=='\n' ){
       n--;
